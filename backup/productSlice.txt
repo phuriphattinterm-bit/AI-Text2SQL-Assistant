@@ -1,0 +1,59 @@
+import axios from "axios";
+import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
+import { type RootState } from "./index";
+
+export interface Product {
+    id: number;
+    name: string;
+    category: string;
+    price: number;
+    stock_quantity: number;
+}
+
+interface ProductState {
+    products: Product[];
+    loading: boolean;
+    error: string | null;
+}
+
+const initialState: ProductState = {
+    products: [],
+    loading: false,
+    error: null,
+}
+
+const API_URL = 'http://localhost:3000/products';
+
+export const fetchProduct = createAsyncThunk('products/fetchProduct', async () => {
+    const response = await axios.get<Product[]>(API_URL);
+    return response.data
+});
+
+const productSlice = createSlice({
+    name: 'products',
+    initialState,
+    reducers: {},
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchProduct.pending, (state) => {
+                state.loading = true;
+            })
+
+            .addCase(fetchProduct.fulfilled, (state, action: PayloadAction<Product[]>) => {
+                state.loading = false;
+                state.products = action.payload;
+            })
+
+            .addCase(fetchProduct.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message || 'Fail to fetch products';
+            })
+
+
+    }
+})
+
+export default productSlice.reducer;
+export const selectProducts = (state: any) => state.products.products;
+export const selectLoading = (state: any) => state.products.loading;
+export const selectError = (state: any) => state.products.error;
